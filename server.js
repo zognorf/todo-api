@@ -2,6 +2,7 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
 var db = require('./db.js');
+var bcrypt = require('bcryptjs');
 
 var app = express();
 var PORT = process.env.PORT || 3000;
@@ -91,18 +92,6 @@ app.delete('/todos/:id', function(req, res) {
     }, function() {
       res.status(500).send();
     });
-  /*  var matchedToDo = _.findWhere(todos, {
-      id: todoid
-    });
-
-    if (!matchedToDo) {
-      res.status(404).json({
-        "error": "No todo found with that ID"
-      });
-    } else {
-      todos = _.without(todos, matchedToDo);
-      res.json(matchedToDo);
-    }*/
 });
 
 // PUT /todos/:id
@@ -148,8 +137,20 @@ app.post('/user', function(req, res) {
     });
 });
 
+// POST /user/login
+app.post('/user/login', function(req, res) {
+  var body = _.pick(req.body, 'email', 'password');
+
+  db.user.authenticate(body)
+    .then(function(user) {
+      res.json(user.toPublicJSON());
+    }, function() {
+      res.status(401).send();
+    });
+});
+
 db.sequelize.sync({
-    force: true
+    //force: true
   })
   .then(function() {
     app.listen(PORT, function() {
